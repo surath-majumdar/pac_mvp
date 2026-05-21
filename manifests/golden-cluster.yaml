@@ -1,0 +1,41 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: KRaftController
+metadata:
+  name: kraft-golden
+  namespace: confluent
+spec:
+  replicas: 3
+  podTemplate:
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/confluent-kafka-role"
+    # New: Topology Spread for AZ distribution 
+  dataVolumeCapacity: 100Gi
+  image:
+    application: confluentinc/cp-server:7.6.0
+    init: confluentinc/confluent-init-container:2.8.0
+  # New Enforced Encrypted Storage Class
+  storageClass:
+    name: gp3-encrypted
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka-golden
+  namespace: confluent
+spec:
+  replicas: 3
+  image:
+    application: confluentinc/cp-server:7.6.0
+    init: confluentinc/confluent-init-container:2.8.0
+  dataVolumeCapacity: 100Gi
+  # New Enforced Encrypted Storage Class
+  storageClass:
+    name: gp3-encrypted
+  dependencies:
+    kRaftController:
+      clusterRef:
+        name: kraft-golden
+  podTemplate:
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/confluent-kafka-role"    
+
