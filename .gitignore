@@ -1,0 +1,18 @@
+# Ignore local environment files
+.DS_Store
+.env
+
+# Ignore Conftest binary (if you download it locally)
+conftest
+
+# Ignore generated test reports and temporary CI artifacts
+*.out
+test-results.json  # Ignore specific output files rather than all JSONs
+coverage.json
+
+# Ignore temporary folders
+temp/
+results/
+
+# Ignore trace files
+trace.*
