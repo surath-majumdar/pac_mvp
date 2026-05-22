@@ -34,16 +34,11 @@ jobs:
             echo "FILE=manifests/golden-cluster.yaml" >> $GITHUB_ENV
           fi
 
-      - name: Provision Ephemeral Kubernetes Cluster (Kind)
-        uses: helm/kind-action@v1.10.0
-        with:
-          cluster_name: iac-poc-cluster
-
       - name: Install Confluent Operator
         run: |
           helm repo add confluentinc https://packages.confluent.io/helm
           helm repo update
-          kubectl create namespace confluent
+          kubectl create namespace confluent --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --namespace confluent
 
       - name: Inject Storage Class Mock
@@ -60,11 +55,7 @@ jobs:
 
       - name: Deploy Selected Manifest
         run: |
-          echo "Deploying $FILE to ephemeral cluster"
+          echo "Deploying $FILE to local cluster"
           kubectl apply -f $FILE
           sleep 10
           kubectl get all -n confluent
-
-
-
-

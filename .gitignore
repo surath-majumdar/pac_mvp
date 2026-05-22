@@ -15,4 +15,5 @@ temp/
 results/
 
 # Ignore trace files
-trace.*actions-runner/
+trace.*
+actions-runner/
