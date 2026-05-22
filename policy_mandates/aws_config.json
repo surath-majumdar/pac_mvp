@@ -1,0 +1,8 @@
+{
+  "aws_mandates": {
+    "instance_type": "m6i",
+    "region": "us-west-2",
+    "require_ebs_encryption": true,
+    "storage_class": "gp3-encrypted"
+  }
+}

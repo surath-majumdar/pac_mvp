@@ -1,0 +1,61 @@
+name: Infrastructure Policy Enforcement
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+    workflow_dispatch:
+      inputs:
+        run_iac:
+            description: 'Select the component to deploy'
+            required: true
+            default: 'manifests/golden-cluster.yaml'
+            type: choice
+            options:
+                - manifests/golden-cluster.yaml
+                - manifests/rogue-cluster.yaml
+                - manifests/topics.yaml
+
+
+jobs:
+  iac-deployment:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Determine Target File
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "FILE=${{ github.event.inputs.run_iac }}" >> $GITHUB_ENV
+          else
+            echo "FILE=manifests/golden-cluster.yaml" >> $GITHUB_ENV
+          fi
+
+      - name: Install Confluent Operator
+        run: |
+          helm repo add confluentinc https://packages.confluent.io/helm
+          helm repo update
+          kubectl create namespace confluent --dry-run=client -o yaml | kubectl apply -f -
+          helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --namespace confluent
+
+      - name: Inject Storage Class Mock
+        run: |
+          DEFAULT_PROVISIONER=$(kubectl get sc -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].provisioner}')
+          cat <<EOF | kubectl apply -f -
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: gp3-encrypted
+          provisioner: $DEFAULT_PROVISIONER
+          volumeBindingMode: WaitForFirstConsumer
+          EOF
+
+      - name: Deploy Selected Manifest
+        run: |
+          echo "Deploying $FILE to local cluster"
+          kubectl apply -f $FILE
+          sleep 10
+          kubectl get all -n confluent

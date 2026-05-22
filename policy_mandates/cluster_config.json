@@ -1,0 +1,7 @@
+{
+  "cluster_mandates": {
+    "min_replicas": 3,
+    "storage_class": "gp3-encrypted",
+    "kraft_controller_nodes": 3
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "mrc_mandates": {
+    "rack_awareness_enabled": true,
+    "topology_constraint_required": true
+  }
+}
